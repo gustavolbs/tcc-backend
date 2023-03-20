@@ -84,7 +84,7 @@ router.post(
         surname,
         email,
         password,
-        city,
+        city: Number(city),
         role,
       });
 
