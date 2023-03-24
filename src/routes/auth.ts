@@ -1,11 +1,12 @@
-import express, { Request, Response } from "express";
+import { Router, Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { body } from "express-validator";
+import authMiddleware from "../middleware/auth";
 
 import { findUserByEmail, createUser } from "../models/User";
 
-const router = express.Router();
+const router = Router();
 
 router.post(
   "/login",
@@ -33,13 +34,19 @@ router.post(
       const payload = {
         user: {
           id: user.id,
+          role: user.role,
         },
       };
 
-      jwt.sign(payload, "secret", { expiresIn: "1h" }, (err, token) => {
-        if (err) throw err;
-        res.json({ token });
-      });
+      jwt.sign(
+        payload,
+        String(process.env.JWT_SECRET),
+        { expiresIn: "8h" },
+        (err, token) => {
+          if (err) throw err;
+          res.json({ token });
+        }
+      );
     } catch (err) {
       if (err instanceof Error) {
         console.error(err.message);
@@ -91,13 +98,19 @@ router.post(
       const payload = {
         user: {
           id: newUser.id,
+          role: newUser.role,
         },
       };
 
-      jwt.sign(payload, "secret", { expiresIn: "1h" }, (err, token) => {
-        if (err) throw err;
-        res.json({ token });
-      });
+      jwt.sign(
+        payload,
+        String(process.env.JWT_SECRET),
+        { expiresIn: "8h" },
+        (err, token) => {
+          if (err) throw err;
+          res.json({ token });
+        }
+      );
     } catch (err) {
       if (err instanceof Error) {
         console.error(err.message);
@@ -108,5 +121,9 @@ router.post(
     }
   }
 );
+
+router.get("/check", authMiddleware, async (req: Request, res: Response) => {
+  res.json({ msg: "Token is valid" });
+});
 
 export default router;
