@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
 import jwt, { JwtPayload } from "jsonwebtoken";
-import { body, param } from "express-validator";
+import { body, param, validationResult } from "express-validator";
 
 import { createCity, findCityById, getCities } from "../models/City";
 
@@ -9,7 +9,7 @@ const router = Router();
 router.post(
   "/create",
   [
-    body("name").notEmpty(),
+    body("name").isString().trim().notEmpty(),
     body("latitude").notEmpty(),
     body("longitude").notEmpty(),
   ],
@@ -28,9 +28,14 @@ router.post(
         return res.status(403).json({ error: "User not authorized" });
       }
 
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(422).json({ errors: errors.array() });
+      }
+
       const { name, latitude, longitude } = req.body;
 
-      const city = await createCity({ name, latitude, longitude });
+      const city = await createCity({ name: name.trim(), latitude, longitude });
 
       res.json(city);
     } catch (error) {
