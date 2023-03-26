@@ -18,17 +18,13 @@ router.post(
       const user = await findUserByEmail(email);
 
       if (!user) {
-        return res
-          .status(400)
-          .json({ errors: [{ msg: "Invalid credentials" }] });
+        return res.status(400).json({ message: "Usuário não encontrado" });
       }
 
       const isMatch = await bcrypt.compare(password, user.password);
 
       if (!isMatch) {
-        return res
-          .status(400)
-          .json({ errors: [{ msg: "Invalid credentials" }] });
+        return res.status(400).json({ message: "Senha inválida" });
       }
 
       const payload = {
@@ -50,9 +46,9 @@ router.post(
     } catch (err) {
       if (err instanceof Error) {
         console.error(err.message);
-        res.status(500).send("Server error");
+        res.status(500).send({ message: "Ops... Ocorreu um erro" });
       } else {
-        console.error("Unexpected error", err);
+        console.error("Erro não identificado", err);
       }
     }
   }
@@ -83,7 +79,7 @@ router.post(
       if (userExists) {
         return res
           .status(400)
-          .json({ errors: [{ msg: "User already exists" }] });
+          .json({ message: "Uma usuário já foi criado utilizando este email" });
       }
 
       const newUser = await createUser({
@@ -114,16 +110,16 @@ router.post(
     } catch (err) {
       if (err instanceof Error) {
         console.error(err.message);
-        res.status(500).send("Server error");
+        res.status(500).send({ message: "Ops... Ocorreu um erro" });
       } else {
-        console.error("Unexpected error", err);
+        console.error("Erro não identificado", err);
       }
     }
   }
 );
 
 router.get("/check", authMiddleware, async (req: Request, res: Response) => {
-  res.json({ msg: "Token is valid" });
+  res.json({ message: "Token válido" });
 });
 
 export default router;

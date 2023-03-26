@@ -16,14 +16,10 @@ app.use(express.json());
 app.use(bodyParser.json());
 app.use(cors());
 
-app.get("/", (req: Request, res: Response) => {
-  res.send("Hello World From the Typescript Server!");
-});
-
 app.use("/auth", authRoutes);
 app.use("/city", cityRoutes);
 app.use("/users", userRoutes);
 
 app.listen(port, () => {
-  console.log(`App listening on port ${port}`);
+  console.log(`App rodando na porta ${port}`);
 });
