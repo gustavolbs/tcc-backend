@@ -19,7 +19,7 @@ router.put(
     try {
       const token = req.headers.authorization?.split(" ")[1];
       if (!token) {
-        return res.status(401).json({ error: "Token not found" });
+        return res.status(401).json({ message: "Token não encontrado" });
       }
 
       const decodedToken = jwt.verify(
@@ -31,33 +31,37 @@ router.put(
         decodedToken.user.role !== "owner" &&
         decodedToken.user.role !== "admin"
       ) {
-        return res.status(403).json({ error: "User not authorized" });
+        return res.status(403).json({ message: "Usuário não autorizado" });
       }
 
       const { email, role } = req.body;
 
       if (!["resident", "manager", "owner", "admin"].includes(role)) {
-        return res.status(400).json({ error: "Invalid role" });
+        return res.status(400).json({ message: "Cargo inválido" });
       }
 
       const user = await findUserByEmail(email);
 
       if (!user) {
-        return res.status(404).json({ error: "User not found" });
+        return res.status(404).json({ message: "Usuário não encontrado" });
       }
 
       if (user.role === role) {
-        return res.status(400).json({ error: "User already have this role" });
+        return res
+          .status(400)
+          .json({ message: "Usuário já possui este cargo" });
       }
 
       if (decodedToken.user.role !== "admin" && role === "admin") {
         return res
           .status(403)
-          .json({ error: "Admin role can only be assigned by admins" });
+          .json({ message: "O cargo ADMIN só pode ser atribuído por admins" });
       }
 
       if (decodedToken.user.role === "owner" && user.role === "admin") {
-        return res.status(403).json({ error: "Admin role cannot be removed" });
+        return res
+          .status(403)
+          .json({ message: "Cargo ADMIN não pode ser removido" });
       }
 
       const updatedUser = await updateUserRole(email, role);
@@ -65,7 +69,7 @@ router.put(
       res.json(updatedUser);
     } catch (error) {
       console.error(error);
-      res.status(500).json({ error: "Internal server error" });
+      res.status(500).send({ message: "Ops... Ocorreu um erro" });
     }
   }
 );
@@ -75,7 +79,7 @@ router.get("/me", async (req: Request, res: Response) => {
     const token = req.headers.authorization?.split(" ")[1];
 
     if (!token) {
-      return res.status(401).json({ error: "Token not found" });
+      return res.status(401).json({ message: "Token não encontrado" });
     }
 
     const decodedToken = jwt.verify(
@@ -85,7 +89,7 @@ router.get("/me", async (req: Request, res: Response) => {
     const user = await findUserById(decodedToken.user.id);
 
     if (!user) {
-      return res.status(404).send({ message: "User not found" });
+      return res.status(404).json({ message: "Usuário não encontrado" });
     }
 
     const userWithoutPassword = exclude(user, ["password"]);
@@ -93,7 +97,7 @@ router.get("/me", async (req: Request, res: Response) => {
     return res.send(userWithoutPassword);
   } catch (error) {
     console.error(error);
-    return res.status(500).send({ message: "Internal server error" });
+    res.status(500).send({ message: "Ops... Ocorreu um erro" });
   }
 });
 
@@ -106,15 +110,18 @@ router.get(
     try {
       const token = req.headers.authorization?.split(" ")[1];
       if (!token) {
-        return res.status(401).json({ error: "Token not found" });
+        return res.status(401).json({ message: "Token não encontrado" });
       }
 
       const users = await getAllUsersByCity(cityId);
+      const usersWithoutPassword = users.map((user) =>
+        exclude(user, ["password"])
+      );
 
-      res.json(users);
+      res.json(usersWithoutPassword);
     } catch (error) {
       console.error(error);
-      res.status(500).json({ error: "Internal server error" });
+      res.status(500).send({ message: "Ops... Ocorreu um erro" });
     }
   }
 );

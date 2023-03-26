@@ -17,7 +17,7 @@ router.post(
     try {
       const token = req.headers.authorization?.split(" ")[1];
       if (!token) {
-        return res.status(401).json({ error: "Token not found" });
+        return res.status(401).json({ message: "Token não encontrado" });
       }
 
       const decodedToken = jwt.verify(
@@ -25,12 +25,15 @@ router.post(
         String(process.env.JWT_SECRET)
       ) as JwtPayload;
       if (decodedToken.user.role !== "admin") {
-        return res.status(403).json({ error: "User not authorized" });
+        return res.status(403).json({ message: "Usuário não autorizado" });
       }
 
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        return res.status(422).json({ errors: errors.array() });
+        // return res.status(422).json({ errors: errors.array() });
+        return res.status(422).json({
+          message: "Campos inválidos. Preencha corretamente e tente novamente",
+        });
       }
 
       const { name, latitude, longitude } = req.body;
@@ -40,7 +43,7 @@ router.post(
       res.json(city);
     } catch (error) {
       console.error(error);
-      res.status(500).json({ error: "Internal server error" });
+      res.status(500).send({ message: "Ops... Ocorreu um erro" });
     }
   }
 );
@@ -52,7 +55,7 @@ router.get("/all", async (req: Request, res: Response) => {
     res.json(cities);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).send({ message: "Ops... Ocorreu um erro" });
   }
 });
 
@@ -65,19 +68,19 @@ router.get(
     try {
       const token = req.headers.authorization?.split(" ")[1];
       if (!token) {
-        return res.status(401).json({ error: "Token not found" });
+        return res.status(401).json({ message: "Token não encontrado" });
       }
 
       const city = await findCityById(id);
 
       if (!city) {
-        return res.status(404).json({ msg: "City not found" });
+        return res.status(404).json({ message: "Cidade não cadastrada" });
       }
 
       res.json(city);
     } catch (error) {
       console.error(error);
-      res.status(500).json({ error: "Internal server error" });
+      res.status(500).send({ message: "Ops... Ocorreu um erro" });
     }
   }
 );
