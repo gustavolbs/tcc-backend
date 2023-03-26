@@ -6,6 +6,7 @@ import cors from "cors";
 import authRoutes from "./routes/auth";
 import cityRoutes from "./routes/city";
 import userRoutes from "./routes/user";
+import issueRoutes from "./routes/issue";
 
 dotenv.config();
 
@@ -19,6 +20,7 @@ app.use(cors());
 app.use("/auth", authRoutes);
 app.use("/city", cityRoutes);
 app.use("/users", userRoutes);
+app.use("/issue", issueRoutes);
 
 app.listen(port, () => {
   console.log(`App rodando na porta ${port}`);
