@@ -19,6 +19,10 @@ model User {
   password String
   city     Int
   role     String   @default("resident")
+
+  issuesReported Issue[] @relation("Reporter")
+  issuesFiscal Issue[] @relation("Fiscal")
+  issuesManaged Issue[] @relation("Manager")
 }
 
 model City {
@@ -26,4 +30,33 @@ model City {
   name      String
   latitude  Float
   longitude Float
+}
+
+model Issue {
+  id            Int      @id @default(autoincrement())
+  status        String   @default("open")
+  cityId        Int
+  latitude      Float
+  longitude     Float
+  category      String
+  description   String
+  date          DateTime
+  reporterId    Int
+  reporter      User     @relation("Reporter", fields: [reporterId], references: [id])
+  fiscalId      Int?
+  fiscal        User?    @relation("Fiscal", fields: [fiscalId], references: [id])
+  managerId     Int?
+  manager       User?    @relation("Manager", fields: [managerId], references: [id])
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([reporterId])
+}
+
+model Comment {
+  id        Int      @id @default(autoincrement())
+  text      String
+  createdAt DateTime @default(now())
+  issueId   Int
+  authorId  Int
 }

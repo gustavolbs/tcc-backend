@@ -34,3 +34,17 @@
    2. manager
    3. owner
    4. admin -> se o usuário for admin
+
+### Problema
+
+1. id
+2. id da cidade
+3. latitude
+4. longitude
+5. categoria
+6. descrição do problema
+7. data
+8. relator - id do usuário que enviou a request
+9. fiscal (opcional, não é colocado junto da criação) - usuário que se auto-atribui
+10. gestor responsável (opcional, não é colocado junto da criação) - usuário que se auto-atribui
+11. comentários
