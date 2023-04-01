@@ -8,8 +8,11 @@ import {
   findIssueById,
   findAllByCityId,
   updateIssueField,
+  findAllFromOneUser,
 } from "../models/Issue";
 import { findUserById } from "../models/User";
+
+import { getUserId } from "../utils/auth";
 
 const router = Router();
 
@@ -158,6 +161,26 @@ router.put(
       );
 
       return res.status(200).send(updatedIssue);
+    } catch (error) {
+      console.log(error);
+      res.status(500).send({ message: "Ops... Ocorreu um erro" });
+    }
+  }
+);
+
+router.get(
+  "/all/:cityId/mine",
+  authMiddleware,
+  [param("cityId").isInt()],
+  async (req: Request, res: Response) => {
+    const cityId = parseInt(req.params.cityId);
+
+    try {
+      const userId = getUserId(req);
+
+      const issues = await findAllFromOneUser(cityId, userId);
+
+      res.json(issues);
     } catch (error) {
       console.log(error);
       res.status(500).send({ message: "Ops... Ocorreu um erro" });
