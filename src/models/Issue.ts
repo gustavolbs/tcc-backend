@@ -63,6 +63,11 @@ export async function findAllByCityId(cityId: number): Promise<Issue[]> {
     where: {
       cityId,
     },
+    orderBy: [
+      {
+        updatedAt: "desc",
+      },
+    ],
     include: {
       reporter: {
         select: {
@@ -85,6 +90,11 @@ export async function findAllFromOneUser(
       cityId,
       reporterId: userId,
     },
+    orderBy: [
+      {
+        updatedAt: "desc",
+      },
+    ],
     include: {
       reporter: {
         select: {

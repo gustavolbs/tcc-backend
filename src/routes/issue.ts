@@ -137,6 +137,14 @@ router.put(
         return res.status(400).send({ message: "Campo inválido." });
       }
 
+      if (issue.reporterId === Number(userId)) {
+        return res
+          .status(400)
+          .send({
+            message: "Você não pode se atribuir como Relator e Fiscal/Gestor",
+          });
+      }
+
       const isAssignedToField =
         (issue as { [key: string]: any })[field] === parseInt(userId);
 
