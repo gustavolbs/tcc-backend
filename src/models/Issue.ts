@@ -63,6 +63,36 @@ export async function findAllByCityId(cityId: number): Promise<Issue[]> {
     where: {
       cityId,
     },
+    include: {
+      reporter: {
+        select: {
+          name: true,
+          surname: true,
+        },
+      },
+    },
+  });
+
+  return issues;
+}
+
+export async function findAllFromOneUser(
+  cityId: number,
+  userId: number
+): Promise<Issue[]> {
+  const issues: Issue[] = await prisma.issue.findMany({
+    where: {
+      cityId,
+      reporterId: userId,
+    },
+    include: {
+      reporter: {
+        select: {
+          name: true,
+          surname: true,
+        },
+      },
+    },
   });
 
   return issues;
