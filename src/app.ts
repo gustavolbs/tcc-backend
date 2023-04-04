@@ -21,6 +21,11 @@ app.use((req, res, next) => {
   next();
 });
 
+app.get("/", (req, res) => {
+  res.send("Hey this is my API running 🥳");
+});
+app.get("/ping", (_req: Request, res: Response) => res.send("pong 🏓"));
+
 app.use("/auth", authRoutes);
 app.use("/city", cityRoutes);
 app.use("/users", userRoutes);
@@ -29,3 +34,6 @@ app.use("/issue", issueRoutes);
 app.listen(port, () => {
   console.log(`App rodando na porta ${port}`);
 });
+
+// Export the Express API
+module.exports = app;
