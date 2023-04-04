@@ -1,7 +1,7 @@
+import dotenv from "dotenv";
 import express, { Express, Request, Response } from "express";
 import bodyParser from "body-parser";
 import cors from "cors";
-import dotenv from "dotenv";
 
 import authRoutes from "./routes/auth";
 import cityRoutes from "./routes/city";
