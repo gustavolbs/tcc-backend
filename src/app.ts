@@ -33,6 +33,3 @@ app.use("/issue", issueRoutes);
 app.listen(port, () => {
   console.log(`App rodando na porta ${port}`);
 });
-
-// Export the Express API
-module.exports = app;
