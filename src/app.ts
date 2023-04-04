@@ -9,13 +9,17 @@ import userRoutes from "./routes/user";
 import issueRoutes from "./routes/issue";
 
 dotenv.config();
-
 const app: Express = express();
 const port = process.env.PORT || 8000;
 
 app.use(express.json());
 app.use(bodyParser.json());
 app.use(cors());
+
+app.get("/", (req, res) => {
+  res.send("Hey this is my API running 🥳");
+});
+app.get("/ping", (_req: Request, res: Response) => res.send("pong 🏓"));
 
 app.use("/auth", authRoutes);
 app.use("/city", cityRoutes);
