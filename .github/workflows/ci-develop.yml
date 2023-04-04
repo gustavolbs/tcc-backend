@@ -1,0 +1,60 @@
+name: Deploy API Express - QA
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: "18.x"
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Deploy to EC2
+        uses: easingthemes/ssh-deploy@main
+        with:
+          SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
+          REMOTE_USER: ubuntu
+          REMOTE_HOST: ${{ secrets.QA_HOSTNAME }}
+          REMOTE_PORT: 22
+          TARGET: /home/ubuntu/api
+          SCRIPT_BEFORE: |
+            sudo apt update -y
+            sudo apt install -y git
+            curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
+            source ~/.bashrc
+            nvm install 18
+            npm install pm2 -g
+            mkdir /home/ubuntu/api
+          SCRIPT_AFTER: |
+            cd /home/ubuntu/api
+            sudo rm -rf /home/ubuntu/api/*
+            sudo git clone https://github.com/gustavolbs/tcc-backend.git -b develop .
+            npm install
+
+  build:
+    runs-on: ubuntu-latest
+    needs: [deploy]
+
+    steps:
+      - name: Post Deploy
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.QA_HOSTNAME }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
+          script: |
+            pm2 delete "fixed-my-city" # pm2: command not found
+            cp /home/ubuntu/.env.development /home/ubuntu/api/.env
+            cd /home/ubuntu/api
+            npm run build # npm: command not found
+            pm2 start npm --name "fixed-my-city" -- start
