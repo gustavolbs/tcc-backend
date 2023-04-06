@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
 import jwt, { JwtPayload } from "jsonwebtoken";
-import { body, param } from "express-validator";
+import { body, param, validationResult } from "express-validator";
 
 import {
   exclude,
@@ -14,8 +14,16 @@ const router = Router();
 
 router.put(
   "/role",
-  [body("email").notEmpty(), body("role").notEmpty()],
+  [body("email").isEmail().notEmpty(), body("role").notEmpty()],
   async (req: Request, res: Response) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      // return res.status(400).json({ errors: errors.array() });
+      return res
+        .status(400)
+        .json({ message: "Verifique os campos e preencha corretamente" });
+    }
+
     try {
       const token = req.headers.authorization?.split(" ")[1];
       if (!token) {

@@ -22,9 +22,9 @@ router.post(
   body("cityId").isInt(),
   body("latitude").isFloat(),
   body("longitude").isFloat(),
-  body("category").isString(),
-  body("description").isString(),
-  body("date").isString(),
+  body("category").isString().notEmpty(),
+  body("description").isString().notEmpty(),
+  body("date").isString().notEmpty(),
   body("reporterId").isInt(),
   async (req: Request, res: Response) => {
     const errors = validationResult(req);
@@ -138,11 +138,9 @@ router.put(
       }
 
       if (issue.reporterId === Number(userId)) {
-        return res
-          .status(400)
-          .send({
-            message: "Você não pode se atribuir como Relator e Fiscal/Gestor",
-          });
+        return res.status(400).send({
+          message: "Você não pode se atribuir como Relator e Fiscal/Gestor",
+        });
       }
 
       const isAssignedToField =
