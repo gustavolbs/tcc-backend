@@ -14,6 +14,12 @@ import {
   updateIssueStatus,
 } from "../models/Issue";
 import { findUserById } from "../models/User";
+import {
+  createComment,
+  deleteCommentById,
+  findCommentById,
+  getAllCommentsByIssueId,
+} from "../models/Comment";
 
 import { getUserId } from "../utils/auth";
 
@@ -132,7 +138,7 @@ router.put(
       const issue = await findIssueById(parseInt(issueId));
 
       if (!issue) {
-        return res.status(404).send({ message: "Issue não encontrada." });
+        return res.status(404).send({ message: "Problema não encontrado." });
       }
 
       // Verificar se o campo a ser atualizado é válido
@@ -201,7 +207,7 @@ router.put(
   "/:issueId/solve",
   authMiddleware,
   [param("issueId").isInt()],
-  async (req: Request<any, any, UpdateIssueRequestBody>, res: Response) => {
+  async (req: Request, res: Response) => {
     const { issueId } = req.params;
 
     try {
@@ -216,7 +222,7 @@ router.put(
       const issue = await findIssueById(parseInt(issueId));
 
       if (!issue) {
-        return res.status(404).send({ message: "Issue não encontrada." });
+        return res.status(404).send({ message: "Problema não encontrado." });
       }
 
       // Verificar se o campo a ser atualizado é válido
@@ -240,6 +246,134 @@ router.put(
       );
 
       return res.status(200).send(updatedIssue);
+    } catch (error) {
+      console.log(error);
+      res.status(500).send({ message: "Ops... Ocorreu um erro" });
+    }
+  }
+);
+
+router.post(
+  "/:issueId/comment/create",
+  authMiddleware,
+  [body("text").isString().trim().notEmpty()],
+  [param("issueId").isInt()],
+  async (req: Request, res: Response) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      // return res.status(400).json({ errors: errors.array() });
+      return res
+        .status(400)
+        .json({ message: "Verifique os campos e preencha corretamente" });
+    }
+
+    const { issueId } = req.params;
+    const { text, commentId } = req.body;
+
+    try {
+      const userId = getUserId(req);
+
+      if (!userId) {
+        return res.status(404).send({ message: "Usuário não encontrado." });
+      }
+
+      // Verificar se a issue é válida
+      const issue = await findIssueById(parseInt(issueId));
+
+      if (!issue) {
+        return res.status(404).send({ message: "Problema não encontrado." });
+      }
+
+      const comment = await createComment({
+        authorId: userId,
+        issueId: Number(issueId),
+        text,
+        ...(commentId && { parentId: commentId }),
+      });
+
+      return res.status(200).send(comment);
+    } catch (error) {
+      console.log(error);
+      res.status(500).send({ message: "Ops... Ocorreu um erro" });
+    }
+  }
+);
+
+router.post(
+  "/:issueId/comment/delete",
+  authMiddleware,
+  [body("commentId").isInt()],
+  [param("issueId").isInt()],
+  async (req: Request, res: Response) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      // return res.status(400).json({ errors: errors.array() });
+      return res
+        .status(400)
+        .json({ message: "Verifique os campos e preencha corretamente" });
+    }
+
+    const { issueId } = req.params;
+    const { commentId } = req.body;
+
+    try {
+      const userId = getUserId(req);
+
+      if (!userId) {
+        return res.status(404).send({ message: "Usuário não encontrado." });
+      }
+
+      // Verificar se a issue é válida
+      const issue = await findIssueById(parseInt(issueId));
+
+      if (!issue) {
+        return res.status(404).send({ message: "Problema não encontrado." });
+      }
+
+      const comment = await findCommentById(commentId);
+
+      if (!comment) {
+        return res.status(404).send({ message: "Comentário não encontrada." });
+      }
+
+      await deleteCommentById(commentId);
+
+      return res
+        .status(200)
+        .send({ message: "Comentário excluído com sucesso" });
+    } catch (error) {
+      console.log(error);
+      res.status(500).send({ message: "Ops... Ocorreu um erro" });
+    }
+  }
+);
+
+router.get(
+  "/:issueId/comment/all",
+  authMiddleware,
+  [param("issueId").isInt()],
+  async (req: Request, res: Response) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      // return res.status(400).json({ errors: errors.array() });
+      return res
+        .status(400)
+        .json({ message: "Verifique os campos e preencha corretamente" });
+    }
+
+    const { issueId } = req.params;
+
+    try {
+      // Verificar se a issue é válida
+      const issue = await findIssueById(parseInt(issueId));
+
+      if (!issue) {
+        return res.status(404).send({ message: "Problema não encontrado." });
+      }
+
+      const comments = await getAllCommentsByIssueId(Number(issueId));
+
+      res.json(comments);
     } catch (error) {
       console.log(error);
       res.status(500).send({ message: "Ops... Ocorreu um erro" });
