@@ -48,3 +48,12 @@
 9. fiscal (opcional, não é colocado junto da criação) - usuário que se auto-atribui
 10. gestor responsável (opcional, não é colocado junto da criação) - usuário que se auto-atribui
 11. comentários
+
+### Status
+
+1. Open
+2. Waiting for fiscal
+3. Waiting for manager
+4. Waiting for manager action
+5. Waiting for reporter response
+6. Solved

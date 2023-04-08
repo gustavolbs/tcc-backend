@@ -3,12 +3,15 @@ import { body, param, validationResult } from "express-validator";
 
 import authMiddleware from "../middleware/auth";
 
+import { STATUS } from "../interfaces/status";
+
 import {
   createIssue,
   findIssueById,
   findAllByCityId,
   updateIssueField,
   findAllFromOneUser,
+  updateIssueStatus,
 } from "../models/Issue";
 import { findUserById } from "../models/User";
 
@@ -187,6 +190,56 @@ router.get(
       const issues = await findAllFromOneUser(cityId, userId);
 
       res.json(issues);
+    } catch (error) {
+      console.log(error);
+      res.status(500).send({ message: "Ops... Ocorreu um erro" });
+    }
+  }
+);
+
+router.put(
+  "/:issueId/solve",
+  authMiddleware,
+  [param("issueId").isInt()],
+  async (req: Request<any, any, UpdateIssueRequestBody>, res: Response) => {
+    const { issueId } = req.params;
+
+    try {
+      // Verificar se o usuário é válido
+      const userId = getUserId(req);
+
+      if (!userId) {
+        return res.status(404).send({ message: "Usuário não encontrado." });
+      }
+
+      // Verificar se a issue é válida
+      const issue = await findIssueById(parseInt(issueId));
+
+      if (!issue) {
+        return res.status(404).send({ message: "Issue não encontrada." });
+      }
+
+      // Verificar se o campo a ser atualizado é válido
+      if (issue.status === STATUS.Solved) {
+        return res
+          .status(400)
+          .send({ message: "O problema já foi marcado como resolvido" });
+      }
+
+      if (issue.reporterId !== Number(userId)) {
+        return res.status(403).send({
+          message:
+            "Você não tem permissão para marcar como resolvido o problema de outro usuário",
+        });
+      }
+
+      // Atualizar o campo
+      const updatedIssue = await updateIssueStatus(
+        parseInt(issueId),
+        STATUS.Solved
+      );
+
+      return res.status(200).send(updatedIssue);
     } catch (error) {
       console.log(error);
       res.status(500).send({ message: "Ops... Ocorreu um erro" });

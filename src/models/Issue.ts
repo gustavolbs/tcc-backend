@@ -1,5 +1,7 @@
 import { PrismaClient, Issue } from "@prisma/client";
 
+import { STATUS } from "../interfaces/status";
+
 const prisma = new PrismaClient();
 
 type IssueInput = {
@@ -16,6 +18,7 @@ export async function createIssue(issueInput: IssueInput): Promise<Issue> {
   const issue: Issue = await prisma.issue.create({
     data: {
       ...issueInput,
+      status: STATUS.WaitingForFiscal,
     },
   });
 
@@ -110,16 +113,48 @@ export async function findAllFromOneUser(
 
 export const updateIssueField = async (
   issueId: number,
-  field: keyof Issue,
+  field: keyof Issue, // fiscalId ou managerId
   value: number | null = null
 ): Promise<Issue> => {
-  const data = value === null ? { [field]: null } : { [field]: value };
+  // A PARTE DE STATUS VAI DAR BUG
+  const data =
+    value === null
+      ? {
+          [field]: null,
+          status:
+            field === "fiscalId"
+              ? STATUS.WaitingForFiscal
+              : STATUS.WaitingForManager,
+        }
+      : {
+          [field]: value,
+          status:
+            field === "fiscalId"
+              ? STATUS.WaitingForManager
+              : STATUS.WaitingForManagerAction,
+        };
 
   const updatedIssue = await prisma.issue.update({
     where: {
       id: issueId,
     },
     data,
+  });
+
+  return updatedIssue;
+};
+
+export const updateIssueStatus = async (
+  issueId: number,
+  value: string
+): Promise<Issue> => {
+  const updatedIssue = await prisma.issue.update({
+    where: {
+      id: issueId,
+    },
+    data: {
+      status: value,
+    },
   });
 
   return updatedIssue;
