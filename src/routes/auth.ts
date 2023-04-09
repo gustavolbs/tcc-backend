@@ -1,7 +1,7 @@
 import { Router, Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { body } from "express-validator";
+import { body, validationResult } from "express-validator";
 import authMiddleware from "../middleware/auth";
 
 import { findUserByEmail, createUser } from "../models/User";
@@ -64,6 +64,14 @@ router.post(
     body("city").notEmpty(),
   ],
   async (req: Request, res: Response) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      // return res.status(400).json({ errors: errors.array() });
+      return res
+        .status(400)
+        .json({ message: "Verifique os campos e preencha corretamente" });
+    }
+
     const {
       name,
       surname,

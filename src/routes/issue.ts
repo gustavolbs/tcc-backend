@@ -3,14 +3,23 @@ import { body, param, validationResult } from "express-validator";
 
 import authMiddleware from "../middleware/auth";
 
+import { STATUS } from "../interfaces/status";
+
 import {
   createIssue,
   findIssueById,
   findAllByCityId,
   updateIssueField,
   findAllFromOneUser,
+  updateIssueStatus,
 } from "../models/Issue";
 import { findUserById } from "../models/User";
+import {
+  createComment,
+  deleteCommentById,
+  findCommentById,
+  getAllCommentsByIssueId,
+} from "../models/Comment";
 
 import { getUserId } from "../utils/auth";
 
@@ -22,9 +31,9 @@ router.post(
   body("cityId").isInt(),
   body("latitude").isFloat(),
   body("longitude").isFloat(),
-  body("category").isString(),
-  body("description").isString(),
-  body("date").isString(),
+  body("category").isString().notEmpty(),
+  body("description").isString().notEmpty(),
+  body("date").isString().notEmpty(),
   body("reporterId").isInt(),
   async (req: Request, res: Response) => {
     const errors = validationResult(req);
@@ -129,7 +138,7 @@ router.put(
       const issue = await findIssueById(parseInt(issueId));
 
       if (!issue) {
-        return res.status(404).send({ message: "Issue não encontrada." });
+        return res.status(404).send({ message: "Problema não encontrado." });
       }
 
       // Verificar se o campo a ser atualizado é válido
@@ -138,11 +147,9 @@ router.put(
       }
 
       if (issue.reporterId === Number(userId)) {
-        return res
-          .status(400)
-          .send({
-            message: "Você não pode se atribuir como Relator e Fiscal/Gestor",
-          });
+        return res.status(400).send({
+          message: "Você não pode se atribuir como Relator e Fiscal/Gestor",
+        });
       }
 
       const isAssignedToField =
@@ -189,6 +196,184 @@ router.get(
       const issues = await findAllFromOneUser(cityId, userId);
 
       res.json(issues);
+    } catch (error) {
+      console.log(error);
+      res.status(500).send({ message: "Ops... Ocorreu um erro" });
+    }
+  }
+);
+
+router.put(
+  "/:issueId/solve",
+  authMiddleware,
+  [param("issueId").isInt()],
+  async (req: Request, res: Response) => {
+    const { issueId } = req.params;
+
+    try {
+      // Verificar se o usuário é válido
+      const userId = getUserId(req);
+
+      if (!userId) {
+        return res.status(404).send({ message: "Usuário não encontrado." });
+      }
+
+      // Verificar se a issue é válida
+      const issue = await findIssueById(parseInt(issueId));
+
+      if (!issue) {
+        return res.status(404).send({ message: "Problema não encontrado." });
+      }
+
+      // Verificar se o campo a ser atualizado é válido
+      if (issue.status === STATUS.Solved) {
+        return res
+          .status(400)
+          .send({ message: "O problema já foi marcado como resolvido" });
+      }
+
+      if (issue.reporterId !== Number(userId)) {
+        return res.status(403).send({
+          message:
+            "Você não tem permissão para marcar como resolvido o problema de outro usuário",
+        });
+      }
+
+      // Atualizar o campo
+      const updatedIssue = await updateIssueStatus(
+        parseInt(issueId),
+        STATUS.Solved
+      );
+
+      return res.status(200).send(updatedIssue);
+    } catch (error) {
+      console.log(error);
+      res.status(500).send({ message: "Ops... Ocorreu um erro" });
+    }
+  }
+);
+
+router.post(
+  "/:issueId/comment/create",
+  authMiddleware,
+  [body("text").isString().trim().notEmpty()],
+  [param("issueId").isInt()],
+  async (req: Request, res: Response) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      // return res.status(400).json({ errors: errors.array() });
+      return res
+        .status(400)
+        .json({ message: "Verifique os campos e preencha corretamente" });
+    }
+
+    const { issueId } = req.params;
+    const { text, commentId } = req.body;
+
+    try {
+      const userId = getUserId(req);
+
+      if (!userId) {
+        return res.status(404).send({ message: "Usuário não encontrado." });
+      }
+
+      // Verificar se a issue é válida
+      const issue = await findIssueById(parseInt(issueId));
+
+      if (!issue) {
+        return res.status(404).send({ message: "Problema não encontrado." });
+      }
+
+      const comment = await createComment({
+        authorId: userId,
+        issueId: Number(issueId),
+        text,
+        ...(commentId && { parentId: commentId }),
+      });
+
+      return res.status(200).send(comment);
+    } catch (error) {
+      console.log(error);
+      res.status(500).send({ message: "Ops... Ocorreu um erro" });
+    }
+  }
+);
+
+router.post(
+  "/:issueId/comment/delete",
+  authMiddleware,
+  [body("commentId").isInt()],
+  [param("issueId").isInt()],
+  async (req: Request, res: Response) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      // return res.status(400).json({ errors: errors.array() });
+      return res
+        .status(400)
+        .json({ message: "Verifique os campos e preencha corretamente" });
+    }
+
+    const { issueId } = req.params;
+    const { commentId } = req.body;
+
+    try {
+      const userId = getUserId(req);
+
+      if (!userId) {
+        return res.status(404).send({ message: "Usuário não encontrado." });
+      }
+
+      // Verificar se a issue é válida
+      const issue = await findIssueById(parseInt(issueId));
+
+      if (!issue) {
+        return res.status(404).send({ message: "Problema não encontrado." });
+      }
+
+      const comment = await findCommentById(commentId);
+
+      if (!comment) {
+        return res.status(404).send({ message: "Comentário não encontrada." });
+      }
+
+      await deleteCommentById(commentId);
+
+      return res
+        .status(200)
+        .send({ message: "Comentário excluído com sucesso" });
+    } catch (error) {
+      console.log(error);
+      res.status(500).send({ message: "Ops... Ocorreu um erro" });
+    }
+  }
+);
+
+router.get(
+  "/:issueId/comment/all",
+  authMiddleware,
+  [param("issueId").isInt()],
+  async (req: Request, res: Response) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      // return res.status(400).json({ errors: errors.array() });
+      return res
+        .status(400)
+        .json({ message: "Verifique os campos e preencha corretamente" });
+    }
+
+    const { issueId } = req.params;
+
+    try {
+      // Verificar se a issue é válida
+      const issue = await findIssueById(parseInt(issueId));
+
+      if (!issue) {
+        return res.status(404).send({ message: "Problema não encontrado." });
+      }
+
+      const comments = await getAllCommentsByIssueId(Number(issueId));
+
+      res.json(comments);
     } catch (error) {
       console.log(error);
       res.status(500).send({ message: "Ops... Ocorreu um erro" });
