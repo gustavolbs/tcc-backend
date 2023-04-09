@@ -55,16 +55,16 @@ model Issue {
 }
 
 model Comment {
-  id        Int       @id @default(autoincrement())
-  text      String    @db.VarChar(1024)
-  createdAt DateTime  @default(now())
+  id        Int      @id @default(autoincrement())
+  text      String   @db.VarChar(1024)
+  createdAt DateTime @default(now())
   issueId   Int
   authorId  Int
-  author    User      @relation("Comments", fields: [authorId], references: [id])
-  
-  parentId  Int?
-  parent    Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  replies   Comment[] @relation("CommentReplies")
+  author    User?     @relation("Comments", fields: [authorId], references: [id])
+
+  parentId Int?
+  parent   Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  replies  Comment[] @relation("CommentReplies")
 
   @@index([issueId])
 }
