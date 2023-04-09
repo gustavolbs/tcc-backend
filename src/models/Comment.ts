@@ -10,7 +10,13 @@ export async function getAllCommentsByIssueId(
       issueId,
     },
     include: {
-      author: true,
+      author: {
+        select: {
+          id: true,
+          name: true,
+          surname: true,
+        },
+      },
     },
   });
 
