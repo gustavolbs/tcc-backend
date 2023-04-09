@@ -1,0 +1,29 @@
+# To get started with Dependabot version updates, you'll need to specify which
+# package ecosystems to update and where the package manifests are located.
+# Please see the documentation for all configuration options:
+# https://docs.github.com/github/administering-a-repository/configuration-options-for-dependency-updates
+
+version: 2
+updates:
+  - package-ecosystem: "" # See documentation for possible values
+    directory: "/" # Location of package manifests
+    schedule:
+      interval: "weekly"
+    branches:
+      - "develop"
+    ignore:
+      - dependency-name: "*"
+    labels:
+      - "dependencies"
+    commit-message:
+      prefix: "chore(deps): update dependencies"
+    reviewers:
+      - "gustavolbs"
+    assignees:
+      - "gustavolbs"
+    destination:
+      branch: "main"
+      commit-message:
+        prefix: "feat(deps): merge from develop to main"
+      pull-request-title:
+        prefix: "Merge from develop to main"
