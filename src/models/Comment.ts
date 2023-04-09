@@ -9,15 +9,15 @@ export async function getAllCommentsByIssueId(
     where: {
       issueId,
     },
-    // include: {
-    //   author: {
-    //     select: {
-    //       id: true,
-    //       name: true,
-    //       surname: true,
-    //     },
-    //   },
-    // },
+    include: {
+      author: {
+        select: {
+          id: true,
+          name: true,
+          surname: true,
+        },
+      },
+    },
   });
 
   return comments;

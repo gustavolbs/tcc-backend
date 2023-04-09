@@ -23,7 +23,7 @@ model User {
   issuesReported Issue[]   @relation("Reporter")
   issuesFiscal   Issue[]   @relation("Fiscal")
   issuesManaged  Issue[]   @relation("Manager")
-  Comment        Comment[] @relation("Comments")
+  Comment        Comment[]
 }
 
 model City {
@@ -60,7 +60,7 @@ model Comment {
   createdAt DateTime @default(now())
   issueId   Int
   authorId  Int
-  author    User?     @relation("Comments", fields: [authorId], references: [id])
+  author    User     @relation(fields: [authorId], references: [id])
 
   parentId Int?
   parent   Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
