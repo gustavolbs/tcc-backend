@@ -12,7 +12,6 @@ export async function getAllCommentsByIssueId(
     include: {
       author: {
         select: {
-          id: true,
           name: true,
           surname: true,
         },
