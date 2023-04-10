@@ -299,11 +299,10 @@ router.post(
   }
 );
 
-router.post(
-  "/:issueId/comment/delete",
+router.delete(
+  "/:issueId/comment/delete/:commentId",
   authMiddleware,
-  [body("commentId").isInt()],
-  [param("issueId").isInt()],
+  [param("issueId").isInt(), param("commentId").isInt()],
   async (req: Request, res: Response) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -313,8 +312,7 @@ router.post(
         .json({ message: "Verifique os campos e preencha corretamente" });
     }
 
-    const { issueId } = req.params;
-    const { commentId } = req.body;
+    const { issueId, commentId } = req.params;
 
     try {
       const userId = getUserId(req);
@@ -330,13 +328,13 @@ router.post(
         return res.status(404).send({ message: "Problema não encontrado." });
       }
 
-      const comment = await findCommentById(commentId);
+      const comment = await findCommentById(Number(commentId));
 
       if (!comment) {
         return res.status(404).send({ message: "Comentário não encontrada." });
       }
 
-      await deleteCommentById(commentId);
+      await deleteCommentById(Number(commentId));
 
       return res
         .status(200)

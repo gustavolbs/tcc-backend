@@ -14,6 +14,28 @@ export async function createCity(data: {
   return city;
 }
 
+export async function updateCity(
+  id: number,
+  data: {
+    name?: string;
+    latitude?: number;
+    longitude?: number;
+  }
+): Promise<City> {
+  const city: City = await prisma.city.update({
+    where: { id },
+    data,
+  });
+
+  return city;
+}
+
+export async function deleteCity(id: number): Promise<void> {
+  await prisma.city.delete({
+    where: { id },
+  });
+}
+
 export async function getCities(): Promise<City[]> {
   const cities: City[] = await prisma.city.findMany();
 
