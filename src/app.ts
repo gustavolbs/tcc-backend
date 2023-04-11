@@ -7,6 +7,7 @@ import authRoutes from "./routes/auth";
 import cityRoutes from "./routes/city";
 import userRoutes from "./routes/user";
 import issueRoutes from "./routes/issue";
+import featureFlagRoutes from "./routes/feature-flag";
 
 dotenv.config();
 const app: Express = express();
@@ -25,6 +26,7 @@ app.use("/auth", authRoutes);
 app.use("/city", cityRoutes);
 app.use("/users", userRoutes);
 app.use("/issue", issueRoutes);
+app.use("/features", featureFlagRoutes);
 
 app.listen(port, () => {
   console.log(`App rodando na porta ${port}`);
