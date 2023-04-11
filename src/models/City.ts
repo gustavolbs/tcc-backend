@@ -13,7 +13,10 @@ export async function createCity(data: {
     data: {
       ...data,
       featureFlags: {
-        connect: ffs.map((ff) => ({ id: ff.id })),
+        create: ffs.map((ff) => ({
+          featureFlag: { connect: { id: ff.id } },
+          status: false,
+        })),
       },
     },
   });
@@ -28,7 +31,7 @@ export async function updateCity(
     latitude?: number;
     longitude?: number;
     featureFlags?: Array<{
-      id: number;
+      featureFlagId: number;
       status: boolean;
     }>;
   }
@@ -39,15 +42,32 @@ export async function updateCity(
       name: data.name,
       latitude: data.latitude,
       longitude: data.longitude,
-      featureFlags: {
-        update: data.featureFlags?.map((ff) => ({
-          where: { id: ff.id },
-          data: { status: ff.status },
-        })),
-      },
     },
-    include: { featureFlags: true },
   });
+
+  // Atualiza o status da feature flag somente se estiver presente no objeto de atualização
+  if (data.featureFlags) {
+    for (const ff of data.featureFlags) {
+      // Verifica se a feature flag pertence à cidade atual
+      const cityFeature = await prisma.cityFeature.findUnique({
+        where: {
+          cityId_featureFlagId: {
+            cityId: id,
+            featureFlagId: ff.featureFlagId,
+          },
+        },
+      });
+
+      if (cityFeature) {
+        await prisma.cityFeature.update({
+          where: { id: cityFeature.id },
+          data: {
+            status: ff.status,
+          },
+        });
+      }
+    }
+  }
 
   return city;
 }
@@ -69,7 +89,7 @@ export async function findCityById(id: number): Promise<City | null> {
     where: {
       id,
     },
-    include: { featureFlags: true },
+    include: { featureFlags: { include: { featureFlag: true } } },
   });
 
   return city;

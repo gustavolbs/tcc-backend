@@ -71,6 +71,7 @@ router.put(
     body("name").isString().trim().notEmpty(),
     body("latitude").notEmpty(),
     body("longitude").notEmpty(),
+    body("featureFlags").isArray(),
   ],
   async (req: Request, res: Response) => {
     const errors = validationResult(req);
@@ -103,12 +104,13 @@ router.put(
         });
       }
 
-      const { id, name, latitude, longitude } = req.body;
+      const { id, name, latitude, longitude, featureFlags } = req.body;
 
       const city = await updateCity(id, {
         name: name.trim(),
         latitude,
         longitude,
+        featureFlags,
       });
 
       res.json(city);

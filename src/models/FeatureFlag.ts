@@ -7,14 +7,19 @@ export async function createFeatureFlag(
   description: string
 ): Promise<FeatureFlag> {
   const cities = await prisma.city.findMany();
+  const cityFeatureFlagData = cities.map((city) => ({
+    cityId: city.id,
+    status: false,
+  }));
 
   const newFeatureFlag = await prisma.featureFlag.create({
     data: {
       slug,
       description,
-      status: false,
       cities: {
-        connect: cities.map((city) => ({ id: city.id })),
+        createMany: {
+          data: cityFeatureFlagData,
+        },
       },
     },
   });
@@ -57,7 +62,6 @@ export async function updateFeatureFlag(
     data: {
       slug: input.slug,
       description: input.description,
-      status: input.status,
     },
   });
 

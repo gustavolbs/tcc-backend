@@ -31,15 +31,24 @@ model City {
   name        String
   latitude    Float
   longitude   Float
-  featureFlags FeatureFlag[] @relation("CityFeatureFlag")
+  featureFlags  CityFeature[] @relation("CityFeatureCity")
 }
 
 model FeatureFlag {
   id     Int     @id @default(autoincrement())
   slug   String
   description String
-  status Boolean
-  cities City[]  @relation("CityFeatureFlag")
+  cities   CityFeature[]   @relation("CityFeatureFeatureFlag")
+}
+
+model CityFeature {
+  id               Int               @id @default(autoincrement())
+  city             City              @relation("CityFeatureCity", fields: [cityId], references: [id])
+  cityId           Int
+  featureFlag      FeatureFlag       @relation("CityFeatureFeatureFlag", fields: [featureFlagId], references: [id])
+  featureFlagId    Int
+  status           Boolean
+  @@unique([cityId, featureFlagId])
 }
 
 model Issue {
