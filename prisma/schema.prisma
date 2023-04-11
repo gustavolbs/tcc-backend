@@ -27,10 +27,18 @@ model User {
 }
 
 model City {
-  id        Int    @id @default(autoincrement())
-  name      String
-  latitude  Float
-  longitude Float
+  id          Int           @id @default(autoincrement())
+  name        String
+  latitude    Float
+  longitude   Float
+  featureFlags FeatureFlag[] @relation("CityFeatureFlag")
+}
+
+model FeatureFlag {
+  id     Int     @id @default(autoincrement())
+  name   String
+  status Boolean
+  cities City[]  @relation("CityFeatureFlag")
 }
 
 model Issue {

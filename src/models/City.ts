@@ -1,4 +1,8 @@
-import { PrismaClient, City } from "@prisma/client";
+import {
+  PrismaClient,
+  City,
+  FeatureFlagWhereUniqueInput,
+} from "@prisma/client";
 
 const prisma = new PrismaClient();
 
@@ -7,8 +11,15 @@ export async function createCity(data: {
   latitude: number;
   longitude: number;
 }): Promise<City> {
+  const ffs = await prisma.featureFlag.findMany();
+
   const city: City = await prisma.city.create({
-    data,
+    data: {
+      ...data,
+      featureFlags: {
+        connect: ffs.map((ff) => ({ id: ff.id })),
+      },
+    },
   });
 
   return city;
@@ -20,11 +31,26 @@ export async function updateCity(
     name?: string;
     latitude?: number;
     longitude?: number;
+    featureFlags?: Array<{
+      id: number;
+      status: boolean;
+    }>;
   }
 ): Promise<City> {
   const city: City = await prisma.city.update({
     where: { id },
-    data,
+    data: {
+      name: data.name,
+      latitude: data.latitude,
+      longitude: data.longitude,
+      featureFlags: {
+        update: data.featureFlags?.map((ff) => ({
+          where: { id: ff.id },
+          data: { status: ff.status },
+        })),
+      },
+    },
+    include: { featureFlags: true },
   });
 
   return city;
@@ -47,6 +73,7 @@ export async function findCityById(id: number): Promise<City | null> {
     where: {
       id,
     },
+    include: { featureFlags: true },
   });
 
   return city;
