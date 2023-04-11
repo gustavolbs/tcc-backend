@@ -36,7 +36,8 @@ model City {
 
 model FeatureFlag {
   id     Int     @id @default(autoincrement())
-  name   String
+  slug   String
+  description String
   status Boolean
   cities City[]  @relation("CityFeatureFlag")
 }

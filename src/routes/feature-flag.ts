@@ -17,7 +17,10 @@ const router = Router();
 router.post(
   "/create",
   authMiddleware,
-  [body("name").isString().trim().notEmpty()],
+  [
+    body("slug").isString().trim().notEmpty(),
+    body("description").isString().trim().notEmpty(),
+  ],
   async (req: Request, res: Response) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -49,9 +52,9 @@ router.post(
         });
       }
 
-      const { name } = req.body;
+      const { slug, description } = req.body;
 
-      const featureFlag = await createFeatureFlag(name);
+      const featureFlag = await createFeatureFlag(slug, description);
 
       res.json(featureFlag);
     } catch (error) {
@@ -125,7 +128,8 @@ router.put(
   authMiddleware,
   [
     body("id").isInt().notEmpty(),
-    body("name").isString().trim().notEmpty(),
+    body("slug").isString().trim().notEmpty(),
+    body("description").isString().trim().notEmpty(),
     body("status").isBoolean().notEmpty(),
   ],
   async (req: Request, res: Response) => {
@@ -151,7 +155,7 @@ router.put(
         return res.status(403).json({ message: "Usuário não autorizado" });
       }
 
-      const { id, name, status } = req.body;
+      const { id, slug, description, status } = req.body;
 
       // Verificar se a feature é válida
       const feature = await getFeatureFlagById(parseInt(id));
@@ -164,7 +168,8 @@ router.put(
 
       const featureFlag = await updateFeatureFlag({
         id,
-        name: name.trim(),
+        slug: slug.trim(),
+        description: description.trim(),
         status,
       });
 

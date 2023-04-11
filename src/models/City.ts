@@ -1,8 +1,4 @@
-import {
-  PrismaClient,
-  City,
-  FeatureFlagWhereUniqueInput,
-} from "@prisma/client";
+import { PrismaClient, City } from "@prisma/client";
 
 const prisma = new PrismaClient();
 

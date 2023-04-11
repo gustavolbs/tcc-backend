@@ -2,12 +2,16 @@ import { PrismaClient, FeatureFlag } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-export async function createFeatureFlag(name: string): Promise<FeatureFlag> {
+export async function createFeatureFlag(
+  slug: string,
+  description: string
+): Promise<FeatureFlag> {
   const cities = await prisma.city.findMany();
 
   const newFeatureFlag = await prisma.featureFlag.create({
     data: {
-      name,
+      slug,
+      description,
       status: false,
       cities: {
         connect: cities.map((city) => ({ id: city.id })),
@@ -38,7 +42,8 @@ export async function getFeatureFlagById(
 
 interface UpdateFeatureFlagInput {
   id: number;
-  name?: string;
+  slug?: string;
+  description?: string;
   status?: boolean;
 }
 
@@ -50,7 +55,8 @@ export async function updateFeatureFlag(
       id: input.id,
     },
     data: {
-      name: input.name,
+      slug: input.slug,
+      description: input.description,
       status: input.status,
     },
   });
