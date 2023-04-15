@@ -2,7 +2,6 @@ import dotenv from "dotenv";
 import express, { Express, Request, Response } from "express";
 import bodyParser from "body-parser";
 import cors from "cors";
-import fs from "fs";
 
 import authRoutes from "./routes/auth";
 import cityRoutes from "./routes/city";
@@ -13,12 +12,6 @@ import featureFlagRoutes from "./routes/feature-flag";
 dotenv.config();
 const app: Express = express();
 const port = process.env.PORT || 8000;
-
-const EXPORTS_DIR = "./exports";
-
-if (!fs.existsSync(EXPORTS_DIR)) {
-  fs.mkdirSync(EXPORTS_DIR);
-}
 
 app.use(express.json());
 app.use(bodyParser.json());
