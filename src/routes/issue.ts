@@ -135,8 +135,6 @@ router.get(
       const issues = await findAllByCityId(filter);
 
       if (isExport) {
-        const filename = `issues-${uuidv4()}`;
-
         // CREATE XLSX FILE
         const workbook = new ExcelJS.Workbook();
         const worksheet = workbook.addWorksheet("Issues");
@@ -146,28 +144,18 @@ router.get(
           width: 20,
         }));
         issues.forEach((issue) => worksheet.addRow(issue));
-        await workbook.xlsx.writeFile(`./dist/exports/${filename}.xlsx`);
+        const buffer = await workbook.xlsx.writeBuffer();
 
         // CREATE RESPONSE
-        res.attachment(
-          path.join(__dirname, `../dist/exports/${filename}.xlsx`)
-        );
-        res.type(
+        res.setHeader(
+          "Content-Type",
           "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         );
-        res.download(
-          path.join(__dirname, "../../dist/exports/", filename + ".xlsx"),
-          function (err) {
-            if (err) {
-              console.error(err);
-            } else {
-              // deletar o arquivo XLSX após o download
-              fs.unlinkSync(
-                path.join(__dirname, "../../dist/exports/", filename + ".xlsx")
-              );
-            }
-          }
+        res.setHeader(
+          "Content-Disposition",
+          `attachment; filename="issues-${uuidv4()}.xlsx"`
         );
+        res.send(buffer);
       } else {
         res.json(issues);
       }
