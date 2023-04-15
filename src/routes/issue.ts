@@ -118,7 +118,6 @@ router.get(
               gte: (() => {
                 const start = new Date(String(startDate));
                 start.setUTCHours(0, 0, 0, 0);
-                console.log("START", start);
                 return start;
               })(),
             }),
@@ -126,7 +125,6 @@ router.get(
               lte: (() => {
                 const end = new Date(String(endDate));
                 end.setUTCHours(23, 59, 59, 999);
-                console.log("END", end);
                 return end;
               })(),
             }),
@@ -148,22 +146,24 @@ router.get(
           width: 20,
         }));
         issues.forEach((issue) => worksheet.addRow(issue));
-        await workbook.xlsx.writeFile(`./exports/${filename}.xlsx`);
+        await workbook.xlsx.writeFile(`./dist/exports/${filename}.xlsx`);
 
         // CREATE RESPONSE
-        res.attachment(path.join(__dirname, `../exports/${filename}.xlsx`));
+        res.attachment(
+          path.join(__dirname, `../dist/exports/${filename}.xlsx`)
+        );
         res.type(
           "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         );
         res.download(
-          path.join(__dirname, "../../exports/", filename + ".xlsx"),
+          path.join(__dirname, "../../dist/exports/", filename + ".xlsx"),
           function (err) {
             if (err) {
               console.error(err);
             } else {
               // deletar o arquivo XLSX após o download
               fs.unlinkSync(
-                path.join(__dirname, "../../exports/", filename + ".xlsx")
+                path.join(__dirname, "../../dist/exports/", filename + ".xlsx")
               );
             }
           }
