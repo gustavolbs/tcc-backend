@@ -71,6 +71,12 @@ export async function updateFeatureFlag(
 export async function deleteFeatureFlag(
   id: number
 ): Promise<FeatureFlag | null> {
+  await prisma.cityFeature.deleteMany({
+    where: {
+      featureFlagId: id,
+    },
+  });
+
   const featureFlag = await prisma.featureFlag.delete({
     where: {
       id,
