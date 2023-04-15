@@ -61,16 +61,28 @@ export async function findIssueById(issueId: number): Promise<Issue | null> {
   return issue;
 }
 
-export async function findAllByCityId(cityId: number): Promise<Issue[]> {
+export interface CityFilter {
+  cityId: number;
+  createdAt?: {
+    gte?: Date;
+    lte?: Date;
+  };
+}
+
+export async function findAllByCityId(filter: CityFilter): Promise<Issue[]> {
+  const orderBy: { createdAt?: "desc" | undefined; updatedAt?: "desc" }[] = [
+    {},
+  ];
+
+  if (filter.createdAt !== undefined) {
+    orderBy[0].createdAt = "desc";
+  } else {
+    orderBy[0].updatedAt = "desc";
+  }
+
   const issues: Issue[] = await prisma.issue.findMany({
-    where: {
-      cityId,
-    },
-    orderBy: [
-      {
-        updatedAt: "desc",
-      },
-    ],
+    where: filter,
+    orderBy,
     include: {
       reporter: {
         select: {

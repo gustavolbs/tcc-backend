@@ -1,5 +1,8 @@
 import { Router, Request, Response } from "express";
 import { body, param, validationResult } from "express-validator";
+import ExcelJS from "exceljs";
+import { v4 as uuidv4 } from "uuid";
+import fs from "fs";
 
 import authMiddleware from "../middleware/auth";
 
@@ -22,6 +25,7 @@ import {
 } from "../models/Comment";
 
 import { getUserId } from "../utils/auth";
+import path from "path";
 
 const router = Router();
 
@@ -101,11 +105,60 @@ router.get(
   [param("cityId").isInt()],
   async (req: Request, res: Response) => {
     const cityId = parseInt(req.params.cityId);
+    const startDate = req.query.startDate;
+    const endDate = req.query.endDate;
+    const isExport = req.query.export === "true";
 
     try {
-      const issues = await findAllByCityId(cityId);
+      const filter = {
+        cityId: cityId,
+        ...((startDate || endDate) && {
+          createdAt: {
+            ...(startDate && {
+              gte: (() => {
+                const start = new Date(String(startDate));
+                start.setUTCHours(0, 0, 0, 0);
+                return start;
+              })(),
+            }),
+            ...(endDate && {
+              lte: (() => {
+                const end = new Date(String(endDate));
+                end.setUTCHours(23, 59, 59, 999);
+                return end;
+              })(),
+            }),
+          },
+        }),
+      };
 
-      res.json(issues);
+      const issues = await findAllByCityId(filter);
+
+      if (isExport) {
+        // CREATE XLSX FILE
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet("Issues");
+        worksheet.columns = Object.keys(issues[0]).map((key) => ({
+          header: key,
+          key: key,
+          width: 20,
+        }));
+        issues.forEach((issue) => worksheet.addRow(issue));
+        const buffer = await workbook.xlsx.writeBuffer();
+
+        // CREATE RESPONSE
+        res.setHeader(
+          "Content-Type",
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        );
+        res.setHeader(
+          "Content-Disposition",
+          `attachment; filename="issues-${uuidv4()}.xlsx"`
+        );
+        res.send(buffer);
+      } else {
+        res.json(issues);
+      }
     } catch (error) {
       console.error(error);
       res.status(500).send({ message: "Ops... Ocorreu um erro" });
@@ -299,11 +352,10 @@ router.post(
   }
 );
 
-router.post(
-  "/:issueId/comment/delete",
+router.delete(
+  "/:issueId/comment/delete/:commentId",
   authMiddleware,
-  [body("commentId").isInt()],
-  [param("issueId").isInt()],
+  [param("issueId").isInt(), param("commentId").isInt()],
   async (req: Request, res: Response) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -313,8 +365,7 @@ router.post(
         .json({ message: "Verifique os campos e preencha corretamente" });
     }
 
-    const { issueId } = req.params;
-    const { commentId } = req.body;
+    const { issueId, commentId } = req.params;
 
     try {
       const userId = getUserId(req);
@@ -330,13 +381,13 @@ router.post(
         return res.status(404).send({ message: "Problema não encontrado." });
       }
 
-      const comment = await findCommentById(commentId);
+      const comment = await findCommentById(Number(commentId));
 
       if (!comment) {
         return res.status(404).send({ message: "Comentário não encontrada." });
       }
 
-      await deleteCommentById(commentId);
+      await deleteCommentById(Number(commentId));
 
       return res
         .status(200)
