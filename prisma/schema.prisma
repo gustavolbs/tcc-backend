@@ -6,46 +6,45 @@ generator client {
 }
 
 datasource db {
-  provider     = "mysql"
-  url          = env("DATABASE_URL")
-  relationMode = "prisma"
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
-  id       Int    @id @default(autoincrement())
-  name     String
-  surname  String
-  email    String @unique
-  password String
-  city     Int
-  role     String @default("resident")
-
-  issuesReported Issue[]   @relation("Reporter")
-  issuesFiscal   Issue[]   @relation("Fiscal")
-  issuesManaged  Issue[]   @relation("Manager")
-  comments       Comment[] @relation("Author")
+  id             Int        @id @default(autoincrement())
+  name           String
+  surname        String
+  email          String     @unique
+  password       String
+  city           Int
+  role           String     @default("resident")
+  issuesReported Issue[]    @relation("Reporter")
+  issuesFiscal   Issue[]    @relation("Fiscal")
+  issuesManaged  Issue[]    @relation("Manager")
+  comments       Comment[]  @relation("Author")
 }
 
 model City {
-  id          Int           @id @default(autoincrement())
-  name        String
-  latitude    Float
-  longitude   Float
-  featureFlags  CityFeature[] @relation("CityFeatureCity")
+  id           Int           @id @default(autoincrement())
+  name         String
+  latitude     Float
+  longitude    Float
+  featureFlags CityFeature[] @relation("CityFeatureCity")
 }
 
 model FeatureFlag {
-  id     Int     @id @default(autoincrement())
-  slug   String
+  id          Int            @id @default(autoincrement())
+  slug        String
   description String
-  cities   CityFeature[]   @relation("CityFeatureFeatureFlag")
+  cities      CityFeature[]  @relation("CityFeatureFeatureFlag")
 }
 
 model CityFeature {
-  id               Int               @id @default(autoincrement())
-  city             City              @relation("CityFeatureCity", fields: [cityId], references: [id])
+  id               Int           @id @default(autoincrement())
+  city             City          @relation("CityFeatureCity", fields: [cityId], references: [id])
   cityId           Int
-  featureFlag      FeatureFlag       @relation("CityFeatureFeatureFlag", fields: [featureFlagId], references: [id])
+  featureFlag      FeatureFlag   @relation("CityFeatureFeatureFlag", fields: [featureFlagId], references: [id])
   featureFlagId    Int
   status           Boolean
   @@unique([cityId, featureFlagId])
@@ -79,10 +78,9 @@ model Comment {
   issueId   Int
   authorId  Int
   author    User     @relation("Author", fields: [authorId], references: [id])
-
-  parentId Int?
-  parent   Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  replies  Comment[] @relation("CommentReplies")
+  parentId  Int?
+  parent    Comment? @relation("CommentReplies", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  replies   Comment[] @relation("CommentReplies")
 
   @@index([issueId])
 }
